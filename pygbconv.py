@@ -3,6 +3,8 @@ from PIL import Image
 from collections import defaultdict
 from math import floor, ceil, log
 
+MAX_SUPPORTED_IMAGES = 256
+
 def chunks(l, n):
     """ Yield successive n-sized chunks from l.
     """
@@ -212,14 +214,22 @@ def compilerom(gbin, gbout, images):
 	fout = open(gbout, "wb")
 	fout.write(gbromfix(baserom+headerpart+gfxpart))
 	fout.close()
-	
 
-if len(sys.argv)<3:
-	print "Usage: ./pygbconv.py output.gb image0.png image1.png ..."
-	print "Will output image slideshow ROM to (output.gb), using any number images."
-	print "Actual number of colors in each image must be four or less. Color depth can be anything that PIL can interpret."
-	print "Do not use a file format that would destroy 4 color images, such as JPEG. PNG, GIF and BMP (with any color depth) are ey-ok."
-elif len(sys.argv)>258:
-	print "Please keep it under 256 images!"
-else:
+def main():
+	if len(sys.argv) < 3:
+		# Too few: usage and exit.
+		print "Usage: ./pygbconv.py output.gb image0.png image1.png ..."
+		print "Outputs image slideshow ROM to (output.gb), for <= 256 images."
+		print "Actual number of colors in each image must be four or less. Color depth can be anything that PIL can interpret."
+		print "Do not use a file format that would destroy 4 color images, such as JPEG. PNG, GIF and BMP (with any color depth) are ey-ok."
+		return 0
+	elif 2 + MAX_SUPPORTED_IMAGES < len(sys.argv):
+		# Too many: invalid
+		print "Please keep it under {} images!" % (MAX_SUPPORTED_IMAGES)
+		return 1
+
 	compilerom("imagerom.gbbase", sys.argv[1], sys.argv[2:])
+	return 0
+
+if __name__ == "__main__":
+	sys.exit(main())
